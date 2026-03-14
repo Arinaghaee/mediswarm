@@ -1,12 +1,19 @@
 import json
+import logging
 
 from agents import emit, get_genai_client
 
+logger = logging.getLogger(__name__)
 MODEL = "gemini-2.5-flash"
 AGENT_NAME = "risk_analyst"
 
 
 async def analyze_risk(query: str, lit_results: dict, idx_results: dict, session_id: str, queue) -> dict:
+    paper_count = len(lit_results.get("papers", []))
+    chunk_count = len(idx_results.get("chunks", []))
+    logger.info("[%s] analyze_risk called | session_id=%s | papers=%d | chunks=%d",
+                AGENT_NAME, session_id, paper_count, chunk_count)
+
     await emit(queue, "agent_start", AGENT_NAME, "Analyzing risk factors from literature...")
 
     client = get_genai_client()
@@ -14,8 +21,10 @@ async def analyze_risk(query: str, lit_results: dict, idx_results: dict, session
     paper_summaries = []
     for p in lit_results.get("papers", [])[:6]:
         paper_summaries.append(f"PMID {p['pmid']}: {p['title']}\n{p['abstract'][:500]}")
+        logger.debug("[%s] Including paper pmid=%s title=%r", AGENT_NAME, p["pmid"], p["title"][:60])
 
     context = "\n\n---\n\n".join(paper_summaries)
+    logger.debug("[%s] Context length for Gemini: %d chars", AGENT_NAME, len(context))
 
     await emit(queue, "agent_thinking", AGENT_NAME,
                f"Running factor extraction on {len(paper_summaries)} papers...")
@@ -55,12 +64,19 @@ async def analyze_risk(query: str, lit_results: dict, idx_results: dict, session
     }}
     """
 
+    logger.debug("[%s] Sending prompt to Gemini (%d chars)", AGENT_NAME, len(prompt))
     response = client.models.generate_content(model=MODEL, contents=prompt)
     text = response.text.strip().strip("```json").strip("```").strip()
+    logger.debug("[%s] Gemini raw response (%d chars):\n%s", AGENT_NAME, len(text), text[:500])
 
     try:
         risk_data = json.loads(text)
-    except json.JSONDecodeError:
+        logger.info("[%s] Parsed risk_factors=%d protective_factors=%d",
+                    AGENT_NAME,
+                    len(risk_data.get("risk_factors", [])),
+                    len(risk_data.get("protective_factors", [])))
+    except json.JSONDecodeError as e:
+        logger.error("[%s] JSON parse failed: %s — using fallback", AGENT_NAME, e)
         risk_data = {
             "risk_factors": [{"factor": "HbA1c > 8%", "importance_score": 0.85,
                                "direction": "increases_risk", "evidence_level": "Strong",
@@ -68,13 +84,15 @@ async def analyze_risk(query: str, lit_results: dict, idx_results: dict, session
                                "reasoning": "Consistently identified in literature"}],
             "protective_factors": [],
             "population_notes": "Parse error — partial results",
-            "evidence_gaps": []
+            "evidence_gaps": [],
         }
 
     factor_count = len(risk_data.get("risk_factors", []))
+    top = [f["factor"] for f in risk_data.get("risk_factors", [])[:5]]
+    logger.info("[%s] Done | top factors: %s", AGENT_NAME, top)
+
     await emit(queue, "agent_done", AGENT_NAME,
                f"Ranked {factor_count} risk factors by evidence strength",
-               {"top_factors": [f["factor"] for f in risk_data.get("risk_factors", [])[:5]],
-                "risk_data": risk_data})
+               {"top_factors": top, "risk_data": risk_data})
 
     return risk_data

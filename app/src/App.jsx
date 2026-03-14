@@ -26,6 +26,22 @@ export default function App() {
     }))
   }, [])
 
+  const handleStop = useCallback(async () => {
+    if (eventSourceRef.current) {
+      eventSourceRef.current.close()
+      eventSourceRef.current = null
+    }
+    if (sessionId) {
+      try { await axios.post(`/api/stop/${sessionId}`) } catch (_) {}
+    }
+    setStatus('idle')
+    setEvents(prev => [...prev, {
+      type: 'error', agent: 'system',
+      message: 'Stopped by user.',
+      timestamp: new Date().toISOString(), data: {}
+    }])
+  }, [sessionId])
+
   const handleSubmit = async (q) => {
     if (!q.trim() || status === 'running') return
 
@@ -96,6 +112,7 @@ export default function App() {
             query={query}
             setQuery={setQuery}
             onSubmit={handleSubmit}
+            onStop={handleStop}
             status={status}
             examples={EXAMPLE_QUERIES}
           />

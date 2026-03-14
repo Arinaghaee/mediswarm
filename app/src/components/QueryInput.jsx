@@ -1,4 +1,4 @@
-export default function QueryInput({ query, setQuery, onSubmit, status, examples }) {
+export default function QueryInput({ query, setQuery, onSubmit, onStop, status, examples }) {
   return (
     <div className="bg-[#12121a] rounded-xl border border-[#2a2a3a] p-5">
       <label className="text-xs font-mono text-purple-400 uppercase tracking-widest mb-3 block">
@@ -21,18 +21,29 @@ export default function QueryInput({ query, setQuery, onSubmit, status, examples
           </button>
         ))}
       </div>
-      <button
-        onClick={() => onSubmit(query)}
-        disabled={!query.trim() || status === 'running'}
-        className="mt-4 w-full bg-purple-600 hover:bg-purple-700 disabled:opacity-40 disabled:cursor-not-allowed text-white font-medium rounded-lg py-2.5 text-sm transition-colors flex items-center justify-center gap-2"
-      >
-        {status === 'running' ? (
-          <>
-            <span className="inline-block w-3 h-3 border-2 border-white/30 border-t-white rounded-full animate-spin"/>
-            Swarm running...
-          </>
-        ) : 'Launch Agent Swarm →'}
-      </button>
+      <div className="mt-4 flex gap-2">
+        <button
+          onClick={() => onSubmit(query)}
+          disabled={!query.trim() || status === 'running'}
+          className="flex-1 bg-purple-600 hover:bg-purple-700 disabled:opacity-40 disabled:cursor-not-allowed text-white font-medium rounded-lg py-2.5 text-sm transition-colors flex items-center justify-center gap-2"
+        >
+          {status === 'running' ? (
+            <>
+              <span className="inline-block w-3 h-3 border-2 border-white/30 border-t-white rounded-full animate-spin"/>
+              Swarm running...
+            </>
+          ) : 'Launch Agent Swarm →'}
+        </button>
+        {status === 'running' && (
+          <button
+            onClick={onStop}
+            className="bg-red-600 hover:bg-red-700 text-white font-medium rounded-lg px-4 py-2.5 text-sm transition-colors flex items-center gap-1.5"
+          >
+            <span className="inline-block w-3 h-3 bg-white rounded-sm"/>
+            Stop
+          </button>
+        )}
+      </div>
     </div>
   )
 }

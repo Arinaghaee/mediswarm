@@ -1,13 +1,17 @@
 import json
+import logging
 from datetime import datetime
 
 from agents import emit, get_genai_client
 
+logger = logging.getLogger(__name__)
 MODEL = "gemini-2.5-flash"
 AGENT_NAME = "report_builder"
 
 
 async def build_report(query: str, synthesis: dict, plan: dict, session_id: str, queue) -> dict:
+    logger.info("[%s] build_report called | session_id=%s | query=%r", AGENT_NAME, session_id, query)
+
     await emit(queue, "agent_start", AGENT_NAME, "Generating final clinical brief...")
 
     client = get_genai_client()
@@ -55,12 +59,20 @@ async def build_report(query: str, synthesis: dict, plan: dict, session_id: str,
     }}
     """
 
+    logger.debug("[%s] Sending report prompt to Gemini (%d chars)", AGENT_NAME, len(prompt))
     response = client.models.generate_content(model=MODEL, contents=prompt)
     text = response.text.strip().strip("```json").strip("```").strip()
+    logger.debug("[%s] Gemini raw response (%d chars):\n%s", AGENT_NAME, len(text), text[:400])
 
     try:
         report = json.loads(text)
-    except Exception:
+        logger.info("[%s] Report parsed | title=%r | risk_factors=%d | recommendations=%d",
+                    AGENT_NAME,
+                    report.get("title"),
+                    len(report.get("risk_factors", [])),
+                    len(report.get("clinical_recommendations", [])))
+    except Exception as e:
+        logger.error("[%s] JSON parse failed: %s — using fallback report", AGENT_NAME, e)
         report = {
             "title": "Clinical Evidence Brief",
             "generated_at": datetime.utcnow().isoformat(),
@@ -73,7 +85,7 @@ async def build_report(query: str, synthesis: dict, plan: dict, session_id: str,
             "key_interventions": [],
             "limitations": synthesis.get("limitations", []),
             "disclaimer": "AI-generated. Verify with clinical guidelines.",
-            "markdown_report": f"# Clinical Brief\n\n{str(synthesis)[:1000]}"
+            "markdown_report": f"# Clinical Brief\n\n{str(synthesis)[:1000]}",
         }
 
     await emit(queue, "agent_done", AGENT_NAME,
@@ -81,4 +93,5 @@ async def build_report(query: str, synthesis: dict, plan: dict, session_id: str,
                {"title": report.get("title"),
                 "recommendations_count": len(report.get("clinical_recommendations", []))})
 
+    logger.info("[%s] Done | session_id=%s", AGENT_NAME, session_id)
     return report
