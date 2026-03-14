@@ -1,16 +1,9 @@
 import asyncio
 import json
-import os
 
-import google.genai as genai
-
-from agents import emit
+from agents import emit, get_genai_client
 
 MODEL = "gemini-2.0-flash"
-
-
-def _get_client():
-    return genai.Client(api_key=os.environ.get("GOOGLE_API_KEY", ""))
 
 
 async def run_swarm(query: str, session_id: str, queue: asyncio.Queue):
@@ -23,7 +16,7 @@ async def run_swarm(query: str, session_id: str, queue: asyncio.Queue):
     try:
         await emit(queue, "agent_start", AGENT_NAME, "Planning research strategy...")
 
-        client = _get_client()
+        client = get_genai_client()
         plan_prompt = f"""
         You are a medical research orchestrator. A clinician asked:
         "{query}"
@@ -52,7 +45,6 @@ async def run_swarm(query: str, session_id: str, queue: asyncio.Queue):
                    f"Research plan ready. Searching for: {', '.join(plan['search_terms'][:3])}...",
                    {"plan": plan})
 
-        # Run literature scout and pdf indexer concurrently
         from agents.literature_scout import search_pubmed
         from agents.pdf_indexer import index_pdfs
         from agents.risk_analyst import analyze_risk
@@ -66,7 +58,7 @@ async def run_swarm(query: str, session_id: str, queue: asyncio.Queue):
             lit_task, idx_task, return_exceptions=True
         )
 
-        # Recovery: if literature scout failed, retry once
+        # Recovery: if literature scout failed, retry once with broader terms
         if isinstance(lit_results, Exception):
             await emit(queue, "agent_thinking", AGENT_NAME,
                        f"Literature scout failed ({str(lit_results)}), retrying with broader terms...")

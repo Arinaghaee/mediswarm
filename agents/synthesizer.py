@@ -1,22 +1,15 @@
 import json
-import os
 
-import google.genai as genai
-
-from agents import emit
+from agents import emit, get_genai_client
 
 MODEL = "gemini-2.0-flash"
 AGENT_NAME = "synthesizer"
 
 
-def _get_client():
-    return genai.Client(api_key=os.environ.get("GOOGLE_API_KEY", ""))
-
-
 async def synthesize_evidence(query: str, lit_results: dict, risk_results: dict, session_id: str, queue) -> dict:
     await emit(queue, "agent_start", AGENT_NAME, "Synthesizing evidence across sources...")
 
-    client = _get_client()
+    client = get_genai_client()
 
     papers = lit_results.get("papers", [])
     top_risks = risk_results.get("risk_factors", [])[:5]

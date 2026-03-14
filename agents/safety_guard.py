@@ -1,27 +1,20 @@
 import json
-import os
 
-import google.genai as genai
-
-from agents import emit
+from agents import emit, get_genai_client
 
 MODEL = "gemini-2.0-flash"
 AGENT_NAME = "safety_guard"
 
 BLOCKED_PATTERNS = [
-    "10.xxxx",                                  # Fake DOI pattern
-    "pubmed.ncbi.nlm.nih.gov/000000",           # Null PMID
+    "10.xxxx",                            # Fake DOI pattern
+    "pubmed.ncbi.nlm.nih.gov/000000",     # Null PMID
 ]
-
-
-def _get_client():
-    return genai.Client(api_key=os.environ.get("GOOGLE_API_KEY", ""))
 
 
 async def validate_output(synthesis: dict, lit_results: dict, session_id: str, queue) -> dict:
     await emit(queue, "agent_start", AGENT_NAME, "Running safety validation on generated content...")
 
-    client = _get_client()
+    client = get_genai_client()
     real_pmids = {p["pmid"] for p in lit_results.get("papers", [])}
 
     await emit(queue, "agent_thinking", AGENT_NAME,
@@ -29,14 +22,12 @@ async def validate_output(synthesis: dict, lit_results: dict, session_id: str, q
 
     synthesis_text = json.dumps(synthesis)
 
-    # Check for blocked patterns
     for pattern in BLOCKED_PATTERNS:
         if pattern in synthesis_text:
             await emit(queue, "agent_thinking", AGENT_NAME,
                        f"Blocked pattern detected: {pattern}. Removing...")
             synthesis_text = synthesis_text.replace(pattern, "[citation removed]")
 
-    # LLM-as-a-Judge validation
     judge_prompt = f"""
     You are a medical content safety validator. Review this clinical synthesis for:
     1. Hallucinated statistics (numbers that seem fabricated)

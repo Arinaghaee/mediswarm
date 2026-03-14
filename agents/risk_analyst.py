@@ -1,24 +1,16 @@
 import json
-import os
 
-import google.genai as genai
-
-from agents import emit
+from agents import emit, get_genai_client
 
 MODEL = "gemini-2.0-flash"
 AGENT_NAME = "risk_analyst"
 
 
-def _get_client():
-    return genai.Client(api_key=os.environ.get("GOOGLE_API_KEY", ""))
-
-
 async def analyze_risk(query: str, lit_results: dict, idx_results: dict, session_id: str, queue) -> dict:
     await emit(queue, "agent_start", AGENT_NAME, "Analyzing risk factors from literature...")
 
-    client = _get_client()
+    client = get_genai_client()
 
-    # Build context from papers
     paper_summaries = []
     for p in lit_results.get("papers", [])[:6]:
         paper_summaries.append(f"PMID {p['pmid']}: {p['title']}\n{p['abstract'][:500]}")
@@ -69,7 +61,6 @@ async def analyze_risk(query: str, lit_results: dict, idx_results: dict, session
     try:
         risk_data = json.loads(text)
     except json.JSONDecodeError:
-        # Recovery: extract what we can
         risk_data = {
             "risk_factors": [{"factor": "HbA1c > 8%", "importance_score": 0.85,
                                "direction": "increases_risk", "evidence_level": "Strong",

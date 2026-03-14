@@ -1,23 +1,16 @@
 import json
-import os
 from datetime import datetime
 
-import google.genai as genai
-
-from agents import emit
+from agents import emit, get_genai_client
 
 MODEL = "gemini-2.0-flash"
 AGENT_NAME = "report_builder"
 
 
-def _get_client():
-    return genai.Client(api_key=os.environ.get("GOOGLE_API_KEY", ""))
-
-
 async def build_report(query: str, synthesis: dict, plan: dict, session_id: str, queue) -> dict:
     await emit(queue, "agent_start", AGENT_NAME, "Generating final clinical brief...")
 
-    client = _get_client()
+    client = get_genai_client()
 
     await emit(queue, "agent_thinking", AGENT_NAME,
                "Formatting report with citations and evidence grades...")
