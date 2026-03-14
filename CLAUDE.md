@@ -63,7 +63,7 @@ mediswarm/
 | Layer | Technology |
 |-------|-----------|
 | Agent framework | `google-adk` (Google Agent Development Kit) |
-| LLM | Gemini 2.0 Flash (`gemini-2.0-flash`) |
+| LLM | Gemini 2.0 Flash (`gemini-2.0-flash-001`) |
 | MCP protocol | Custom FastAPI MCP servers |
 | Backend API | FastAPI + Server-Sent Events (SSE) for log streaming |
 | Frontend | React 18 + Vite + Tailwind CSS |
@@ -130,7 +130,7 @@ NCBI_API_KEY=your_ncbi_api_key_optional
 ## KEY CONSTRAINTS
 
 - **NEVER hardcode API keys** — always use `os.environ.get()`
-- Use `gemini-2.0-flash` not `gemini-1.5-pro` (cost/speed for hackathon)
+- Use `gemini-2.0-flash-001` not `gemini-1.5-pro` (cost/speed for hackathon)
 - Every agent response must include a `reasoning_trace` field
 - The orchestrator must implement retry logic (max 2 retries per agent)
 - Safety guard must block responses containing hallucinated DOIs

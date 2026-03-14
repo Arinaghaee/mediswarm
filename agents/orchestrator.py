@@ -3,7 +3,7 @@ import json
 
 from agents import emit, get_genai_client
 
-MODEL = "gemini-2.0-flash"
+MODEL = "gemini-2.5-flash"
 
 
 async def run_swarm(query: str, session_id: str, queue: asyncio.Queue):

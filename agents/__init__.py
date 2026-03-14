@@ -8,8 +8,7 @@ import google.genai as genai
 def get_genai_client() -> genai.Client:
     """
     Returns a Vertex AI genai client using Application Default Credentials.
-    Set GOOGLE_GENAI_USE_VERTEXAI=true, GOOGLE_CLOUD_PROJECT, and
-    GOOGLE_CLOUD_REGION in your environment (or .env file).
+    Reads GOOGLE_CLOUD_PROJECT and GOOGLE_CLOUD_REGION from the environment.
     """
     return genai.Client(
         vertexai=True,
