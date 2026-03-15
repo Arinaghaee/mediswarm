@@ -9,12 +9,13 @@ const AGENTS = [
 ]
 
 const STATE_STYLES = {
-  idle:           { dot: 'bg-[#2a2a3a]',   text: 'text-[#475569]',  label: 'idle' },
-  agent_start:    { dot: 'bg-amber-500',    text: 'text-amber-400',  label: 'starting' },
-  agent_thinking: { dot: 'bg-amber-400 animate-pulse', text: 'text-amber-300', label: 'thinking' },
-  agent_done:     { dot: 'bg-emerald-500',  text: 'text-emerald-400', label: 'done' },
-  agent_failed:   { dot: 'bg-red-500',      text: 'text-red-400',    label: 'failed' },
-  error:          { dot: 'bg-red-500',      text: 'text-red-400',    label: 'error' },
+  idle:            { dot: 'bg-[#2a2a3a]',   text: 'text-[#475569]',  label: 'idle' },
+  agent_start:     { dot: 'bg-amber-500',    text: 'text-amber-400',  label: 'starting' },
+  agent_thinking:  { dot: 'bg-amber-400 animate-pulse', text: 'text-amber-300', label: 'thinking' },
+  agent_done:      { dot: 'bg-emerald-500',  text: 'text-emerald-400', label: 'done' },
+  swarm_complete:  { dot: 'bg-emerald-500',  text: 'text-emerald-400', label: 'done' },
+  agent_failed:    { dot: 'bg-red-500',      text: 'text-red-400',    label: 'failed' },
+  error:           { dot: 'bg-red-500',      text: 'text-red-400',    label: 'error' },
 }
 
 export default function AgentCard({ agentStates }) {

@@ -157,6 +157,13 @@ async def search_pubmed(plan: dict, session_id: str, queue) -> dict:
 
     logger.info("[%s] Done | parsed %d/%d papers | query=%r",
                 AGENT_NAME, len(papers), len(ids), search_query)
+
+    if papers:
+        top_titles = [p["title"] for p in papers[:3]]
+        titles_preview = " | ".join(f'"{t[:60]}"' for t in top_titles)
+        await emit(queue, "agent_thinking", AGENT_NAME,
+                   f"Top papers found: {titles_preview}")
+
     await emit(queue, "agent_done", AGENT_NAME,
                f"Retrieved {len(papers)} papers with abstracts",
                {"paper_count": len(papers), "papers": [p["title"] for p in papers[:5]]})

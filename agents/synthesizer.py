@@ -57,11 +57,13 @@ async def synthesize_evidence(query: str, lit_results: dict, risk_results: dict,
 
     try:
         synthesis = json.loads(text)
+        findings_count = len(synthesis.get("key_findings", []))
+        evidence_quality = synthesis.get("evidence_quality", "N/A")
         logger.info("[%s] Synthesis parsed | evidence_quality=%s | findings=%d | recommendations=%d",
-                    AGENT_NAME,
-                    synthesis.get("evidence_quality"),
-                    len(synthesis.get("key_findings", [])),
+                    AGENT_NAME, evidence_quality, findings_count,
                     len(synthesis.get("recommendations", [])))
+        await emit(queue, "agent_thinking", AGENT_NAME,
+                   f"Assigning evidence grade {evidence_quality} — merging {findings_count} findings across {len(papers)} papers")
     except Exception as e:
         logger.error("[%s] JSON parse failed: %s — using raw text fallback", AGENT_NAME, e)
         synthesis = {"executive_summary": response.text[:500],

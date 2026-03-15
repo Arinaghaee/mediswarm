@@ -60,6 +60,8 @@ async def run_swarm(query: str, session_id: str, queue: asyncio.Queue):
 
         # Phase 1: Parallel data gathering
         logger.info("[%s] Phase 1 — launching literature_scout + pdf_indexer in parallel", AGENT_NAME)
+        await emit(queue, "agent_thinking", AGENT_NAME,
+                   "Delegating to literature_scout and pdf_indexer in parallel")
         lit_task = asyncio.create_task(search_pubmed(plan, session_id, queue))
         idx_task = asyncio.create_task(index_pdfs(plan, session_id, queue))
 

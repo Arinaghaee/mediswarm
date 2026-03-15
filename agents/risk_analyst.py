@@ -91,6 +91,10 @@ async def analyze_risk(query: str, lit_results: dict, idx_results: dict, session
     top = [f["factor"] for f in risk_data.get("risk_factors", [])[:5]]
     logger.info("[%s] Done | top factors: %s", AGENT_NAME, top)
 
+    for rf in risk_data.get("risk_factors", [])[:5]:
+        await emit(queue, "agent_thinking", AGENT_NAME,
+                   f"Identified: {rf['factor']} (importance: {rf.get('importance_score', 'N/A')})")
+
     await emit(queue, "agent_done", AGENT_NAME,
                f"Ranked {factor_count} risk factors by evidence strength",
                {"top_factors": top, "risk_data": risk_data})

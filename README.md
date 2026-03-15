@@ -3,8 +3,8 @@
 
 > Gemini Nexus Hackathon 2026 | Track A: Intelligence Bureau | Solo Submission
 
-**Live Demo:** https://YOUR_CLOUD_RUN_URL
-**Demo Video:** https://youtube.com/watch?v=YOUR_VIDEO_ID
+**Demo Video:** https://youtu.be/Yu8iZrm2vH8
+**GitHub:** https://github.com/Arinaghaee/mediswarm
 
 ---
 
@@ -87,7 +87,7 @@ User Clinical Query
 
 ```bash
 # Clone
-git clone https://github.com/YOUR_USERNAME/mediswarm
+git clone https://github.com/Arinaghaee/mediswarm
 cd mediswarm
 
 # Backend

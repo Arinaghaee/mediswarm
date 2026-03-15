@@ -72,7 +72,7 @@ export default function ClinicalBrief({ report, status, query }) {
                 <div>
                   <div className="text-xs font-medium text-[#f1f5f9]">{rec.action}</div>
                   <div className="text-xs text-[#475569] mt-0.5">
-                    {rec.strength} · {rec.rationale?.substring(0, 80)}
+                    {rec.strength} · {rec.rationale}
                   </div>
                 </div>
               </div>

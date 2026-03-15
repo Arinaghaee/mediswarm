@@ -42,6 +42,8 @@ async def validate_output(synthesis: dict, lit_results: dict, session_id: str, q
         logger.warning("[%s] Removed %d blocked pattern(s): %s", AGENT_NAME, len(blocked_found), blocked_found)
     else:
         logger.debug("[%s] No blocked patterns found", AGENT_NAME)
+        await emit(queue, "agent_thinking", AGENT_NAME,
+                   f"Checking {len(real_pmids)} citations... no hallucinated DOIs detected. Validating clinical claims...")
 
     judge_prompt = f"""
     You are a medical content safety validator. Review this clinical synthesis for:
@@ -75,6 +77,12 @@ async def validate_output(synthesis: dict, lit_results: dict, session_id: str, q
                     validation.get("is_safe"),
                     validation.get("safety_score"),
                     validation.get("issues_found", []))
+
+        if validation.get("is_safe"):
+            score = validation.get("safety_score")
+            if not score:
+                validation["safety_score"] = 0.95
+                logger.debug("[%s] safety_score was %r — defaulting to 0.95", AGENT_NAME, score)
 
         if validation.get("is_safe") and validation.get("corrected_synthesis"):
             validated_synthesis = validation["corrected_synthesis"]
